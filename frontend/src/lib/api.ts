@@ -1,6 +1,6 @@
 // API 客户端 — 统一管理后端 REST API 调用
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8100";
 
 async function request<T>(
   path: string,

@@ -24,12 +24,12 @@
 **Step 1: 创建目录结构**
 
 ```bash
-mkdir -p /home/dgx1/projects/jetson-yolo-platform/backend/{routers,services,models,utils}
-touch /home/dgx1/projects/jetson-yolo-platform/backend/__init__.py
-touch /home/dgx1/projects/jetson-yolo-platform/backend/routers/__init__.py
-touch /home/dgx1/projects/jetson-yolo-platform/backend/services/__init__.py
-touch /home/dgx1/projects/jetson-yolo-platform/backend/models/__init__.py
-touch /home/dgx1/projects/jetson-yolo-platform/backend/utils/__init__.py
+mkdir -p backend/{routers,services,models,utils}
+touch backend/__init__.py
+touch backend/routers/__init__.py
+touch backend/services/__init__.py
+touch backend/models/__init__.py
+touch backend/utils/__init__.py
 ```
 
 **Step 2: 创建 requirements.txt**
@@ -121,7 +121,7 @@ async def health():
 **Step 5: 验证启动**
 
 ```bash
-cd /home/dgx1/projects/jetson-yolo-platform/backend
+cd jetson-yolo-platform/backend
 pip install -r requirements.txt
 python -c "from main import app; print('Backend skeleton OK')"
 ```
@@ -129,7 +129,7 @@ python -c "from main import app; print('Backend skeleton OK')"
 **Step 6: Commit**
 
 ```bash
-cd /home/dgx1/projects/jetson-yolo-platform
+cd jetson-yolo-platform
 git init
 git add -A
 git commit -m "feat: initialize backend skeleton"
@@ -223,7 +223,7 @@ async def get_session():
 **Step 3: 验证**
 
 ```bash
-cd /home/dgx1/projects/jetson-yolo-platform/backend
+cd jetson-yolo-platform/backend
 python -c "
 import sys; sys.path.insert(0, '.')
 import asyncio
@@ -374,7 +374,7 @@ async def delete_model(model_id: int, db: AsyncSession = Depends(get_session)):
 **Step 3: 验证**
 
 ```bash
-cd /home/dgx1/projects/jetson-yolo-platform/backend
+cd jetson-yolo-platform/backend
 python -c "
 import sys; sys.path.insert(0, '.')
 from routers.models import router
@@ -512,7 +512,7 @@ asyncio.create_task(compile_model(record.id))
 **Step 3: 验证**
 
 ```bash
-cd /home/dgx1/projects/jetson-yolo-platform/backend
+cd jetson-yolo-platform/backend
 python -c "
 import sys; sys.path.insert(0, '.')
 from services.model_compiler import compile_model, get_gpu_architecture
@@ -654,7 +654,7 @@ class EnginePool:
 **Objective:** 创建前端项目
 
 ```bash
-cd /home/dgx1/projects/jetson-yolo-platform
+cd jetson-yolo-platform
 npx create-next-app@latest frontend --typescript --tailwind --eslint --app --src-dir --no-import-alias
 cd frontend
 npm install shadcn-ui recharts zustand lucide-react @radix-ui/react-tabs

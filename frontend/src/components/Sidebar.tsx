@@ -9,11 +9,13 @@ import {
   Activity,
   Settings,
   Github,
+  Monitor,
 } from "lucide-react";
 import clsx from "clsx";
 
 const navItems = [
   { href: "/dashboard", label: "仪表盘", icon: LayoutDashboard },
+  { href: "/display", label: "大屏展示", icon: Monitor },
   { href: "/models", label: "模型管理", icon: Box },
   { href: "/streams", label: "流配置", icon: Radio },
   { href: "/monitor", label: "系统监控", icon: Activity },

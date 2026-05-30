@@ -20,7 +20,7 @@ export class WSClient {
 
   constructor(options?: WSOptions) {
     this.options = {
-      url: options?.url || process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8000/ws",
+      url: options?.url || process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8100/ws",
       reconnectInterval: options?.reconnectInterval || 3000,
       maxRetries: options?.maxRetries || 10,
     };
