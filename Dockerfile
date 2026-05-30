@@ -1,6 +1,6 @@
 # =============================================================================
 # Jetson YOLO Platform - Dockerfile (ARM64)
-# 多阶段构建: base → backend → frontend → runtime
+# 多阶段构建: base → backend-deps → frontend-build → runtime
 # =============================================================================
 
 # ---- Stage 1: Base ----
@@ -9,63 +9,65 @@ FROM arm64v8/python:3.10-slim AS base
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONUNBUFFERED=1
 
-# 系统依赖
+# 系统依赖（最小集）
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libgl1-mesa-glx \
-    libglib2.0-0 \
-    libsm6 \
-    libxext6 \
-    libxrender-dev \
+    libgl1 \
+    libglib2.0-0t64 \
     libgomp1 \
     ffmpeg \
-    nodejs \
-    npm \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# CUDA + TensorRT（Jetson 上预装，这里留空留给目标平台的 TensorRT）
-# 实际构建时取消注释对应平台的 TensorRT 安装
-# RUN apt-get install -y --no-install-recommends tensorrt
-
 WORKDIR /app
 
-# ---- Stage 2: Backend ----
-FROM base AS backend
+# ---- Stage 2: Backend deps ----
+FROM base AS backend-deps
 
 COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# 复制后端代码
 COPY backend/ /app/backend/
-COPY backend/__init__.py /app/
-COPY backend/config.py /app/backend/
 
-# 确保目录存在
+# 确保运行时目录存在
 RUN mkdir -p /app/backend/models /app/backend/engines /app/backend/config /app/backend/data
 
-# ---- Stage 3: Frontend ----
-FROM node:20-slim AS frontend
+# ---- Stage 3: Frontend build ----
+FROM node:20-slim AS frontend-build
 
 WORKDIR /app
 COPY frontend/package*.json ./
-RUN npm ci --only=production
+
+# 安装 ALL deps（含 devDependencies，build 需要 TypeScript/Tailwind/PostCSS）
+RUN npm ci
 
 COPY frontend/ ./
 RUN npm run build
 
 # ---- Stage 4: Runtime ----
-FROM base AS runtime
+FROM arm64v8/python:3.10-slim AS runtime
 
-# 安装 nginx
-RUN apt-get update && apt-get install -y --no-install-recommends nginx && \
-    rm -rf /var/lib/apt/lists/* && \
-    rm /etc/nginx/sites-enabled/default
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONUNBUFFERED=1
 
-# 拷贝后端
-COPY --from=backend /usr/local/lib/python3.10/site-packages /usr/local/lib/python3.10/site-packages
-COPY --from=backend /app/backend /app/backend
+# 系统依赖（nginx + runtime libs）
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libgl1 \
+    libglib2.0-0t64 \
+    libgomp1 \
+    ffmpeg \
+    curl \
+    nginx \
+    && rm -rf /var/lib/apt/lists/* \
+    && rm -f /etc/nginx/sites-enabled/default
 
-# 拷贝前端构建产物
-COPY --from=frontend /app/out /app/frontend/out
+# 拷贝 Python 依赖 + 后端代码
+COPY --from=backend-deps /usr/local/lib/python3.10/site-packages /usr/local/lib/python3.10/site-packages
+COPY --from=backend-deps /app/backend /app/backend
+COPY --from=backend-deps /usr/local/bin/uvicorn /usr/local/bin/uvicorn
+
+# 拷贝前端构建产物（静态导出 out/）
+COPY --from=frontend-build /app/out /app/frontend/out
 
 # Nginx 配置
 COPY nginx.conf /etc/nginx/sites-enabled/jetson-yolo.conf
