@@ -1,0 +1,48 @@
+version: "3.8"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: jetson-yolo-platform:latest
+    container_name: jetson-yolo
+    ports:
+      - "80:80"
+      - "8000:8000"
+    volumes:
+      # 模型和引擎持久化
+      - ./backend/models:/app/backend/models
+      - ./backend/engines:/app/backend/engines
+      - ./backend/data:/app/backend/data
+      - ./backend/config:/app/backend/config
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility,video
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+
+  # 可选：开发模式（热重载）
+  dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    profiles:
+      - dev
+    ports:
+      - "3000:3000"
+      - "8000:8000"
+    volumes:
+      - ./backend:/app/backend
+      - ./frontend:/app/frontend
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility,video

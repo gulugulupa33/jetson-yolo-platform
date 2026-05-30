@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+.env
+.venv/
+venv/
+node_modules/
+.next/
+out/
+*.engine
+*.onnx
+backend/data/
+backend/models/
